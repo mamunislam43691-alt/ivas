@@ -1,0 +1,90 @@
+{% extends "admin/layout.html" %}
+{% block title %}Ranges — VoltX Admin{% endblock %}
+{% block content %}
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+  <div class="page-title" style="margin:0;">📡 Range Management</div>
+  <div style="display:flex;gap:10px;">
+    <button class="btn btn-primary" onclick="syncRanges()"><i class="fa fa-sync"></i> Sync from IVASMS</button>
+    <a href="/admin/ranges/suggested" class="btn btn-outline"><i class="fa fa-star"></i> Smart Ranges</a>
+  </div>
+</div>
+
+<div class="card">
+  <table>
+    <thead>
+      <tr>
+        <th>Range</th>
+        <th>Numbers</th>
+        <th>Total OTPs</th>
+        <th>Last Hour</th>
+        <th>Success %</th>
+        <th>Last Checked</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for rng in ranges %}
+    <tr>
+      <td>
+        <strong>{{ rng.range_value }}</strong>
+        {% if rng.is_suggested %}<span class="badge badge-yellow" style="margin-left:6px;">⭐ Hot</span>{% endif %}
+      </td>
+      <td>{{ rng.numbers|length }}</td>
+      <td>{{ rng.otp_count }}</td>
+      <td>
+        {% if rng.otp_last_hour > 0 %}
+          <span style="color:var(--green);">+{{ rng.otp_last_hour }}</span>
+        {% else %}0{% endif %}
+      </td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div style="background:var(--border);border-radius:4px;height:5px;width:60px;overflow:hidden;">
+            <div style="background:{% if rng.success_rate > 50 %}var(--green){% elif rng.success_rate > 20 %}var(--yellow){% else %}var(--red){% endif %};height:100%;width:{{ [rng.success_rate,100]|min }}%;"></div>
+          </div>
+          <span style="font-size:12px;">{{ rng.success_rate }}%</span>
+        </div>
+      </td>
+      <td style="color:var(--muted);font-size:12px;">{{ rng.last_checked.strftime('%H:%M') if rng.last_checked else '—' }}</td>
+      <td>
+        <span class="badge {% if rng.is_active %}badge-green{% else %}badge-red{% endif %}">
+          {{ 'Active' if rng.is_active else 'Inactive' }}
+        </span>
+      </td>
+      <td>
+        <button class="btn btn-sm btn-outline" onclick="toggleRange({{ rng.id }}, this)">
+          {{ 'Deactivate' if rng.is_active else 'Activate' }}
+        </button>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="8" style="text-align:center;color:var(--muted);padding:40px;">No ranges yet — click "Sync from IVASMS"</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+function syncRanges() {
+  const btn = event.target;
+  btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Syncing...';
+  btn.disabled = true;
+  fetch('/admin/ranges/sync', {method:'POST'})
+    .then(r => r.json())
+    .then(d => {
+      btn.innerHTML = '<i class="fa fa-sync"></i> Sync from IVASMS';
+      btn.disabled = false;
+      if (d.error) showAlert('Error: ' + d.error, 'error');
+      else { showAlert(`✅ Synced! New ranges: ${d.new_ranges}, Numbers: ${d.total_numbers}`, 'success'); setTimeout(()=>location.reload(), 1500); }
+    });
+}
+function toggleRange(id, btn) {
+  fetch(`/admin/ranges/${id}/toggle`, {method:'POST'})
+    .then(r => r.json())
+    .then(d => {
+      btn.textContent = d.is_active ? 'Deactivate' : 'Activate';
+      showAlert('Range updated!', 'success');
+    });
+}
+</script>
+{% endblock %}

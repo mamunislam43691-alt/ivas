@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block body %}
+<nav class="navbar">
+  <span class="brand">⚡ VoltX Admin</span>
+  <div class="nav-links">
+    <span style="color:var(--muted);font-size:13px;">{{ current_user.username }}</span>
+    <a href="/admin/logout"><i class="fa fa-sign-out-alt"></i> Logout</a>
+  </div>
+</nav>
+<div class="sidebar">
+  <a href="/admin/dashboard" class="menu-item {% if request.path == '/admin/dashboard' or request.path == '/admin' %}active{% endif %}">
+    <i class="fa fa-chart-line"></i> Dashboard
+  </a>
+  <a href="/admin/bot-config" class="menu-item {% if 'bot-config' in request.path %}active{% endif %}">
+    <i class="fa fa-robot"></i> Bot Config
+  </a>
+  <a href="/admin/update-cookies" class="menu-item {% if 'update-cookies' in request.path %}active{% endif %}">
+    <i class="fa fa-cookie-bite"></i> Update Cookies
+  </a>
+  <a href="/admin/ranges" class="menu-item {% if request.path == '/admin/ranges' %}active{% endif %}">
+    <i class="fa fa-layer-group"></i> Ranges
+  </a>
+  <a href="/admin/ranges/suggested" class="menu-item {% if 'suggested' in request.path %}active{% endif %}">
+    <i class="fa fa-star"></i> Smart Ranges
+  </a>
+  <a href="/admin/users" class="menu-item {% if 'users' in request.path %}active{% endif %}">
+    <i class="fa fa-users"></i> Users
+  </a>
+  <a href="/admin/otp-logs" class="menu-item {% if 'otp-logs' in request.path %}active{% endif %}">
+    <i class="fa fa-key"></i> OTP Logs
+  </a>
+</div>
+<div class="main-content">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+      <div class="alert alert-{{ 'success' if cat == 'success' else ('warning' if cat == 'warning' else 'error') }}">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+  {% block content %}{% endblock %}
+</div>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "admin/layout.html" %}
+{% block title %}OTP Logs — VoltX Admin{% endblock %}
+{% block content %}
+<div class="page-title">🔑 OTP Logs</div>
+<div class="card">
+  <table>
+    <thead><tr><th>Number</th><th>Range</th><th>Service</th><th>OTP Code</th><th>User</th><th>Received At</th></tr></thead>
+    <tbody>
+    {% for log in logs.items %}
+    <tr>
+      <td><code>{{ log.number }}</code></td>
+      <td><span class="badge badge-blue">{{ log.range_value }}</span></td>
+      <td>{{ log.service }}</td>
+      <td><code style="color:var(--green);font-size:18px;font-weight:700;letter-spacing:2px;">{{ log.otp_code }}</code></td>
+      <td>{% if log.user_id %}<span class="badge badge-purple">User #{{ log.user_id }}</span>{% else %}<span style="color:var(--muted);">—</span>{% endif %}</td>
+      <td style="color:var(--muted);">{{ log.received_at.strftime('%d %b %Y %H:%M:%S') }}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:40px;">No OTPs logged yet</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <!-- Pagination -->
+  <div style="margin-top:16px;display:flex;gap:8px;justify-content:center;">
+    {% if logs.has_prev %}<a href="?page={{ logs.prev_num }}" class="btn btn-outline btn-sm">← Prev</a>{% endif %}
+    <span style="padding:6px 12px;color:var(--muted);font-size:13px;">Page {{ logs.page }} / {{ logs.pages }}</span>
+    {% if logs.has_next %}<a href="?page={{ logs.next_num }}" class="btn btn-outline btn-sm">Next →</a>{% endif %}
+  </div>
+</div>
+{% endblock %}

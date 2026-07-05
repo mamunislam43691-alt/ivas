@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>VoltX — Dashboard</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<style>
+:root{--bg:#0d0d1a;--card:#13132b;--border:#1e1e3f;--accent:#6c63ff;--accent2:#00d4ff;--green:#00e676;--red:#ff1744;--yellow:#ffd600;--text:#e0e0ff;--muted:#7070a0;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;}
+.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;justify-content:space-between;align-items:center;}
+.brand{font-size:20px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.main{max-width:900px;margin:0 auto;padding:24px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px;}
+.card-title{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;}
+.btn{padding:10px 20px;border-radius:8px;border:none;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;}
+.btn-sm{padding:6px 14px;font-size:12px;}
+.badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+.badge-green{background:rgba(0,230,118,.15);color:var(--green);}
+.badge-blue{background:rgba(0,212,255,.15);color:var(--accent2);}
+.badge-yellow{background:rgba(255,214,0,.15);color:var(--yellow);}
+.number-card{background:rgba(108,99,255,.06);border:1px solid var(--accent);border-radius:12px;padding:16px;margin-bottom:12px;}
+.number-big{font-size:26px;font-weight:700;letter-spacing:2px;color:var(--accent2);}
+.otp-big{font-size:32px;font-weight:700;letter-spacing:4px;color:var(--green);}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th,td{padding:9px 12px;border-bottom:1px solid var(--border);text-align:left;}
+th{color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span class="brand">⚡ VoltX</span>
+  <div style="display:flex;gap:14px;align-items:center;">
+    <span style="color:var(--muted);font-size:13px;">👤 {{ user.username }}</span>
+    <a href="/get-number" class="btn btn-primary btn-sm">+ Get Number</a>
+    <a href="/logout" style="color:var(--muted);font-size:13px;">Logout</a>
+  </div>
+</div>
+
+<div class="main">
+  <!-- Hot Ranges -->
+  {% if suggested %}
+  <div class="card">
+    <div class="card-title">🔥 Suggested Ranges (Best OTP rate right now)</div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+      {% for rng in suggested %}
+      <a href="/get-number" style="background:rgba(108,99,255,.1);border:1px solid var(--accent);border-radius:10px;padding:12px 18px;text-align:center;min-width:130px;text-decoration:none;">
+        <div style="font-size:16px;font-weight:700;color:var(--accent2);">{{ rng.range_value }}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;">{{ rng.success_rate }}% rate · {{ rng.otp_count }} OTPs</div>
+        <span class="badge badge-yellow" style="margin-top:6px;">⭐ Hot</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- My Active Numbers -->
+  <div class="card">
+    <div class="card-title">📱 My Active Numbers</div>
+    {% if my_numbers %}
+      {% for phone in my_numbers %}
+      <div class="number-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <div>
+            <div class="number-big">{{ phone.number }}</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px;">
+              Range: {{ phone.range.range_value }} &nbsp;·&nbsp;
+              Expires: {{ phone.expires_at.strftime('%H:%M') if phone.expires_at else '—' }}
+            </div>
+          </div>
+          <a href="/number/{{ phone.id }}" class="btn btn-primary btn-sm">View OTP</a>
+        </div>
+        {% if phone.otp_received %}
+        <div style="margin-top:12px;background:rgba(0,230,118,.08);border:1px solid var(--green);border-radius:8px;padding:12px;">
+          <div style="font-size:11px;color:var(--muted);">OTP Received:</div>
+          <div class="otp-big">{{ phone.otp_received }}</div>
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    {% else %}
+      <div style="text-align:center;color:var(--muted);padding:30px;">
+        No active numbers. <a href="/get-number">Get a number →</a>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Recent OTPs -->
+  {% if recent_otps %}
+  <div class="card">
+    <div class="card-title">🕐 Recent OTPs</div>
+    <table>
+      <thead><tr><th>Number</th><th>OTP</th><th>Service</th><th>Time</th></tr></thead>
+      <tbody>
+      {% for log in recent_otps %}
+      <tr>
+        <td><code>{{ log.number }}</code></td>
+        <td><code style="color:var(--green);font-size:16px;font-weight:700;">{{ log.otp_code }}</code></td>
+        <td>{{ log.service }}</td>
+        <td style="color:var(--muted);">{{ log.received_at.strftime('%H:%M') }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+</body>
+</html>

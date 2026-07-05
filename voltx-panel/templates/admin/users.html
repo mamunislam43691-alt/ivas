@@ -1,0 +1,41 @@
+{% extends "admin/layout.html" %}
+{% block title %}Users — VoltX Admin{% endblock %}
+{% block content %}
+<div class="page-title">👥 User Management</div>
+<div class="card" style="max-width:500px;">
+  <div class="card-title">Add New User</div>
+  <form method="POST" action="/admin/users/add" style="display:flex;gap:10px;flex-wrap:wrap;">
+    <input class="form-control" name="username" placeholder="Username" required style="flex:1;min-width:120px;">
+    <input class="form-control" name="password" type="password" placeholder="Password" required style="flex:1;min-width:120px;">
+    <button class="btn btn-primary" type="submit"><i class="fa fa-plus"></i> Add</button>
+  </form>
+</div>
+<div class="card">
+  <table>
+    <thead><tr><th>Username</th><th>API Key</th><th>Numbers</th><th>Created</th><th>Status</th><th>Action</th></tr></thead>
+    <tbody>
+    {% for u in users %}
+    <tr>
+      <td><strong>{{ u.username }}</strong></td>
+      <td><code style="font-size:11px;color:var(--muted);">{{ u.api_key[:16] if u.api_key else '—' }}...</code></td>
+      <td>{{ u.numbers|length }}</td>
+      <td style="color:var(--muted);">{{ u.created_at.strftime('%d %b %Y') }}</td>
+      <td><span class="badge {% if u.is_active %}badge-green{% else %}badge-red{% endif %}">{{ 'Active' if u.is_active else 'Disabled' }}</span></td>
+      <td><button class="btn btn-sm btn-outline" onclick="toggleUser({{ u.id }}, this)">{{ 'Disable' if u.is_active else 'Enable' }}</button></td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:30px;">No users yet</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+<script>
+function toggleUser(id, btn) {
+  fetch(`/admin/users/${id}/toggle`, {method:'POST'})
+    .then(r=>r.json()).then(d=>{
+      btn.textContent = d.is_active ? 'Disable' : 'Enable';
+      showAlert('User updated!', 'success');
+    });
+}
+</script>
+{% endblock %}

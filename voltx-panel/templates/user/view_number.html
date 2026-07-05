@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Waiting for OTP — VoltX</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<style>
+:root{--bg:#0d0d1a;--card:#13132b;--border:#1e1e3f;--accent:#6c63ff;--accent2:#00d4ff;--green:#00e676;--red:#ff1744;--yellow:#ffd600;--text:#e0e0ff;--muted:#7070a0;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;}
+.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;justify-content:space-between;align-items:center;}
+.brand{font-size:20px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.main{max-width:600px;margin:40px auto;padding:0 24px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:32px;text-align:center;}
+.number-display{font-size:36px;font-weight:700;letter-spacing:4px;color:var(--accent2);margin:16px 0;}
+.otp-display{font-size:48px;font-weight:700;letter-spacing:6px;color:var(--green);margin:16px 0;animation:glow 1.5s ease-in-out infinite alternate;}
+@keyframes glow{from{text-shadow:0 0 10px var(--green);}to{text-shadow:0 0 30px var(--green),0 0 60px var(--green);}}
+.status-waiting{color:var(--yellow);}
+.status-received{color:var(--green);}
+.status-expired{color:var(--red);}
+.timer{font-size:13px;color:var(--muted);margin-top:8px;}
+.pulse{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--yellow);animation:pulse 1s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(1.3);}}
+.message-box{background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:8px;padding:14px;margin-top:16px;font-size:13px;text-align:left;color:var(--muted);white-space:pre-wrap;}
+.copy-btn{padding:8px 18px;border-radius:8px;background:var(--accent);border:none;color:#fff;cursor:pointer;font-size:13px;margin-top:12px;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span class="brand">⚡ VoltX</span>
+  <a href="/dashboard" style="color:var(--muted);font-size:13px;">← Dashboard</a>
+</div>
+<div class="main">
+  <div class="card">
+    <div style="font-size:14px;color:var(--muted);">Your Number</div>
+    <div class="number-display">{{ phone.number }}</div>
+    <div style="font-size:12px;color:var(--muted);">Range: {{ phone.range.range_value }}</div>
+
+    <div id="statusSection" style="margin-top:24px;">
+      {% if phone.otp_received %}
+        <div class="status-received" style="font-size:16px;font-weight:600;">✅ OTP Received!</div>
+        <div class="otp-display" id="otpDisplay">{{ phone.otp_received }}</div>
+        <button class="copy-btn" onclick="copyOTP('{{ phone.otp_received }}')"><i class="fa fa-copy"></i> Copy OTP</button>
+        {% if phone.otp_message %}
+        <div class="message-box">{{ phone.otp_message }}</div>
+        {% endif %}
+      {% else %}
+        <div class="status-waiting" style="font-size:16px;font-weight:600;">
+          <span class="pulse"></span> Waiting for OTP...
+        </div>
+        <div class="timer" id="timerDisplay">
+          Expires: {{ phone.expires_at.strftime('%H:%M:%S') if phone.expires_at else '—' }}
+        </div>
+        <div id="otpSection" style="display:none;">
+          <div class="otp-display" id="otpDisplay"></div>
+          <button class="copy-btn" onclick="copyOTP()"><i class="fa fa-copy"></i> Copy OTP</button>
+          <div class="message-box" id="msgBox" style="display:none;"></div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+{% if not phone.otp_received %}
+const numberId = {{ phone.id }};
+let pollInterval = setInterval(checkOTP, 5000);
+
+function checkOTP() {
+  fetch(`/api/check-otp/${numberId}`)
+    .then(r => r.json())
+    .then(d => {
+      if (d.status === 'received') {
+        clearInterval(pollInterval);
+        document.getElementById('otpDisplay').textContent = d.otp;
+        document.getElementById('otpSection').style.display = 'block';
+        if (d.message) {
+          document.getElementById('msgBox').textContent = d.message;
+          document.getElementById('msgBox').style.display = 'block';
+        }
+        document.querySelector('.status-waiting').innerHTML = '✅ OTP Received!';
+        document.querySelector('.status-waiting').className = 'status-received';
+        document.getElementById('timerDisplay').style.display = 'none';
+        // Play sound notification
+        try { new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAA...').play(); } catch(e){}
+      } else if (d.status === 'expired') {
+        clearInterval(pollInterval);
+        document.querySelector('.status-waiting').innerHTML = '⏱️ Expired';
+        document.querySelector('.status-waiting').className = 'status-expired';
+      }
+    });
+}
+{% endif %}
+
+function copyOTP(otp) {
+  const text = otp || document.getElementById('otpDisplay').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.innerHTML = '✅ Copied!';
+    setTimeout(() => btn.innerHTML = '<i class="fa fa-copy"></i> Copy OTP', 2000);
+  });
+}
+</script>
+</body>
+</html>

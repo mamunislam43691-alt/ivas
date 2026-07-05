@@ -1,0 +1,137 @@
+{% extends "admin/layout.html" %}
+{% block title %}Dashboard — VoltX Admin{% endblock %}
+{% block content %}
+<div class="page-title">📊 Dashboard</div>
+
+<div class="stat-grid">
+  <div class="stat-card green">
+    <div class="val">{{ stats.total_otps }}</div>
+    <div class="lbl"><i class="fa fa-key"></i> Total OTPs</div>
+  </div>
+  <div class="stat-card blue">
+    <div class="val">{{ stats.active_ranges }}</div>
+    <div class="lbl"><i class="fa fa-layer-group"></i> Active Ranges</div>
+  </div>
+  <div class="stat-card purple">
+    <div class="val">{{ stats.total_users }}</div>
+    <div class="lbl"><i class="fa fa-users"></i> Users</div>
+  </div>
+  <div class="stat-card yellow">
+    <div class="val">{{ stats.active_numbers }}</div>
+    <div class="lbl"><i class="fa fa-phone"></i> Active Numbers</div>
+  </div>
+  <div class="stat-card red">
+    <div class="val">{{ stats.total_ranges }}</div>
+    <div class="lbl"><i class="fa fa-list"></i> Total Ranges</div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+
+<!-- Bot Status -->
+<div class="card">
+  <div class="card-title">🤖 Bot Status</div>
+  <div style="display:flex;align-items:center;justify-content:space-between;">
+    <div>
+      <span class="badge {% if cfg.is_running %}badge-green{% else %}badge-red{% endif %}">
+        {% if cfg.is_running %}● Running{% else %}● Stopped{% endif %}
+      </span>
+      <div style="font-size:12px;color:var(--muted);margin-top:8px;">
+        Token: {{ cfg.bot_token[:20] }}...
+      </div>
+    </div>
+    <button class="btn {% if cfg.is_running %}btn-danger{% else %}btn-success{% endif %} btn-sm" onclick="toggleBot(this)">
+      {% if cfg.is_running %}Stop Bot{% else %}Start Bot{% endif %}
+    </button>
+  </div>
+  <div style="margin-top:12px;font-size:12px;color:var(--muted);">
+    Session: 
+    {% if cfg.session_updated %}
+      <span style="color:var(--green);">Updated {{ cfg.session_updated.strftime('%d %b %H:%M') }}</span>
+    {% else %}
+      <span style="color:var(--red);">No cookies loaded</span>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card">
+  <div class="card-title">⚡ Quick Actions</div>
+  <div style="display:flex;flex-direction:column;gap:10px;">
+    <button class="btn btn-primary" onclick="syncRanges()"><i class="fa fa-sync"></i> Sync Ranges from IVASMS</button>
+    <a href="/admin/update-cookies" class="btn btn-outline" style="text-align:center;display:block;"><i class="fa fa-cookie-bite"></i> Update Session Cookies</a>
+    <a href="/admin/ranges/suggested" class="btn btn-outline" style="text-align:center;display:block;"><i class="fa fa-star"></i> View Smart Ranges</a>
+  </div>
+</div>
+
+</div>
+
+<!-- Recent OTPs -->
+<div class="card">
+  <div class="card-title">🔑 Recent OTPs</div>
+  <table>
+    <thead><tr><th>Number</th><th>Range</th><th>Service</th><th>OTP</th><th>Time</th></tr></thead>
+    <tbody>
+    {% for log in otp_logs %}
+    <tr>
+      <td><code>{{ log.number }}</code></td>
+      <td><span class="badge badge-blue">{{ log.range_value }}</span></td>
+      <td>{{ log.service }}</td>
+      <td><code style="color:var(--green);font-size:16px;font-weight:700;">{{ log.otp_code }}</code></td>
+      <td style="color:var(--muted);">{{ log.received_at.strftime('%d %b %H:%M') }}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5" style="text-align:center;color:var(--muted);padding:30px;">No OTPs yet</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Top Ranges -->
+<div class="card">
+  <div class="card-title">📈 Top Ranges by OTP Count</div>
+  <table>
+    <thead><tr><th>Range</th><th>OTPs</th><th>Last Hour</th><th>Success %</th><th>Status</th><th>Suggested</th></tr></thead>
+    <tbody>
+    {% for rng in ranges[:10] %}
+    <tr>
+      <td><strong>{{ rng.range_value }}</strong></td>
+      <td>{{ rng.otp_count }}</td>
+      <td>{{ rng.otp_last_hour }}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="background:var(--border);border-radius:4px;height:6px;width:80px;overflow:hidden;">
+            <div style="background:var(--green);height:100%;width:{{ [rng.success_rate,100]|min }}%;"></div>
+          </div>
+          {{ rng.success_rate }}%
+        </div>
+      </td>
+      <td><span class="badge {% if rng.is_active %}badge-green{% else %}badge-red{% endif %}">{{ 'Active' if rng.is_active else 'Inactive' }}</span></td>
+      <td>{% if rng.is_suggested %}<span class="badge badge-yellow">⭐ Yes</span>{% endif %}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+function toggleBot(btn) {
+  fetch('/admin/bot/toggle', {method:'POST'})
+    .then(r => r.json())
+    .then(d => {
+      btn.textContent = d.is_running ? 'Stop Bot' : 'Start Bot';
+      btn.className = `btn ${d.is_running ? 'btn-danger' : 'btn-success'} btn-sm`;
+      showAlert(`Bot ${d.status}!`, 'success');
+    });
+}
+function syncRanges() {
+  showAlert('Syncing ranges...', 'success');
+  fetch('/admin/ranges/sync', {method:'POST'})
+    .then(r => r.json())
+    .then(d => {
+      if (d.error) showAlert(d.error, 'error');
+      else showAlert(`Synced! New ranges: ${d.new_ranges}, Total numbers: ${d.total_numbers}`, 'success');
+    });
+}
+</script>
+{% endblock %}

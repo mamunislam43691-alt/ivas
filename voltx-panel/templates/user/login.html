@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>VoltX — Login</title>
+<style>
+:root{--bg:#0d0d1a;--card:#13132b;--border:#1e1e3f;--accent:#6c63ff;--accent2:#00d4ff;--text:#e0e0ff;--muted:#7070a0;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.login-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:40px;width:360px;}
+.brand{font-size:30px;font-weight:700;text-align:center;margin-bottom:6px;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:28px;}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:1px;}
+input{width:100%;padding:11px 14px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;margin-bottom:14px;}
+input:focus{outline:none;border-color:var(--accent);}
+.btn{width:100%;padding:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:8px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;}
+.btn:hover{opacity:.9;}
+.alert{padding:10px 14px;border-radius:8px;margin-bottom:14px;font-size:13px;background:rgba(255,23,68,.1);border:1px solid #ff1744;color:#ff1744;}
+.admin-link{text-align:center;margin-top:16px;font-size:12px;color:var(--muted);}
+.admin-link a{color:var(--accent2);}
+</style>
+</head>
+<body>
+<div class="login-box">
+  <div class="brand">⚡ VoltX</div>
+  <div class="sub">SMS OTP Service</div>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}<div class="alert">{{ msg }}</div>{% endfor %}
+  {% endwith %}
+  <form method="POST">
+    <label>Username</label>
+    <input name="username" type="text" placeholder="your username" required>
+    <label>Password</label>
+    <input name="password" type="password" placeholder="••••••••" required>
+    <button class="btn" type="submit">Login →</button>
+  </form>
+  <div class="admin-link"><a href="/admin/login">Admin Panel →</a></div>
+</div>
+</body>
+</html>

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}VoltX Panel{% endblock %}</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d0d1a;
+  --card: #13132b;
+  --border: #1e1e3f;
+  --accent: #6c63ff;
+  --accent2: #00d4ff;
+  --green: #00e676;
+  --red: #ff1744;
+  --yellow: #ffd600;
+  --text: #e0e0ff;
+  --muted: #7070a0;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; min-height: 100vh; }
+a { color: var(--accent2); text-decoration: none; }
+a:hover { color: #fff; }
+
+.navbar {
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+}
+.navbar .brand { font-size: 22px; font-weight: 700; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.navbar .nav-links { display: flex; gap: 20px; align-items: center; }
+.navbar .nav-links a { color: var(--muted); font-size: 14px; transition: color .2s; }
+.navbar .nav-links a:hover, .navbar .nav-links a.active { color: var(--text); }
+
+.sidebar {
+  width: 220px; background: var(--card); border-right: 1px solid var(--border);
+  padding: 24px 0; position: fixed; top: 55px; left: 0; bottom: 0; overflow-y: auto;
+}
+.sidebar .menu-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 20px; color: var(--muted); font-size: 14px; transition: all .2s;
+  border-left: 3px solid transparent;
+}
+.sidebar .menu-item:hover, .sidebar .menu-item.active {
+  color: var(--text); background: rgba(108,99,255,.1); border-left-color: var(--accent);
+}
+.sidebar .menu-item i { width: 18px; text-align: center; }
+
+.main-content { margin-left: 220px; padding: 24px; min-height: calc(100vh - 55px); }
+.page-title { font-size: 22px; font-weight: 600; margin-bottom: 20px; }
+
+.card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px; margin-bottom: 20px;
+}
+.card-title { font-size: 14px; color: var(--muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
+
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
+.stat-card .val { font-size: 28px; font-weight: 700; }
+.stat-card .lbl { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.stat-card.green { border-top: 3px solid var(--green); }
+.stat-card.blue  { border-top: 3px solid var(--accent2); }
+.stat-card.purple{ border-top: 3px solid var(--accent); }
+.stat-card.yellow{ border-top: 3px solid var(--yellow); }
+.stat-card.red   { border-top: 3px solid var(--red); }
+
+.btn {
+  padding: 8px 18px; border-radius: 8px; border: none;
+  font-size: 13px; cursor: pointer; transition: all .2s; font-weight: 500;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: #5a52d5; }
+.btn-success { background: var(--green); color: #000; }
+.btn-danger  { background: var(--red); color: #fff; }
+.btn-info    { background: var(--accent2); color: #000; }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+.btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+.btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { padding: 10px 14px; text-align: left; color: var(--muted); font-weight: 500; border-bottom: 1px solid var(--border); }
+td { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+tr:hover td { background: rgba(255,255,255,.02); }
+
+.badge {
+  padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+}
+.badge-green  { background: rgba(0,230,118,.15); color: var(--green); }
+.badge-red    { background: rgba(255,23,68,.15);  color: var(--red); }
+.badge-blue   { background: rgba(0,212,255,.15);  color: var(--accent2); }
+.badge-purple { background: rgba(108,99,255,.15); color: var(--accent); }
+.badge-yellow { background: rgba(255,214,0,.15);  color: var(--yellow); }
+
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+.form-control {
+  width: 100%; padding: 10px 14px;
+  background: rgba(255,255,255,.05); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); font-size: 14px;
+  transition: border-color .2s;
+}
+.form-control:focus { outline: none; border-color: var(--accent); }
+select.form-control option { background: #1a1a3e; }
+
+.alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; }
+.alert-success { background: rgba(0,230,118,.1); border: 1px solid var(--green); color: var(--green); }
+.alert-error   { background: rgba(255,23,68,.1);  border: 1px solid var(--red);   color: var(--red); }
+.alert-warning { background: rgba(255,214,0,.1);  border: 1px solid var(--yellow);color: var(--yellow); }
+
+.toggle-switch {
+  position: relative; display: inline-block; width: 44px; height: 24px;
+}
+.toggle-switch input { display: none; }
+.toggle-slider {
+  position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+  background: #333; border-radius: 24px; transition: .3s;
+}
+.toggle-slider:before {
+  content: ''; position: absolute; width: 18px; height: 18px;
+  left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: .3s;
+}
+input:checked + .toggle-slider { background: var(--accent); }
+input:checked + .toggle-slider:before { transform: translateX(20px); }
+
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .main-content { margin-left: 0; }
+}
+</style>
+{% block extra_css %}{% endblock %}
+</head>
+<body>
+{% block body %}{% endblock %}
+<script>
+function showAlert(msg, type='success') {
+  const el = document.createElement('div');
+  el.className = `alert alert-${type}`;
+  el.textContent = msg;
+  document.querySelector('.main-content')?.prepend(el);
+  setTimeout(() => el.remove(), 4000);
+}
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

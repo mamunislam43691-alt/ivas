@@ -1,0 +1,50 @@
+{% extends "admin/layout.html" %}
+{% block title %}Bot Config — VoltX Admin{% endblock %}
+{% block content %}
+<div class="page-title">🤖 Bot Configuration</div>
+<div class="card" style="max-width:600px;">
+  <form method="POST">
+    <div class="form-group">
+      <label>Telegram Bot Token</label>
+      <input class="form-control" name="bot_token" type="text" value="{{ cfg.bot_token }}" placeholder="1234567890:AAH...">
+    </div>
+    <div class="form-group">
+      <label>Telegram Chat ID (for OTP alerts)</label>
+      <input class="form-control" name="chat_id" type="text" value="{{ cfg.chat_id }}" placeholder="-100123456789">
+    </div>
+    <div class="form-group">
+      <label>IVASMS Email</label>
+      <input class="form-control" name="ivasms_email" type="email" value="{{ cfg.ivasms_email }}">
+    </div>
+    <div class="form-group">
+      <label>IVASMS Password</label>
+      <input class="form-control" name="ivasms_password" type="password" value="{{ cfg.ivasms_password }}">
+    </div>
+    <button class="btn btn-primary" type="submit"><i class="fa fa-save"></i> Save Config</button>
+  </form>
+</div>
+
+<div class="card" style="max-width:600px;">
+  <div class="card-title">🔄 Bot Control</div>
+  <div style="display:flex;align-items:center;gap:16px;">
+    <span class="badge {% if cfg.is_running %}badge-green{% else %}badge-red{% endif %}">
+      {% if cfg.is_running %}● Running{% else %}● Stopped{% endif %}
+    </span>
+    <button class="btn {% if cfg.is_running %}btn-danger{% else %}btn-success{% endif %}" onclick="toggleBot(this)">
+      {{ 'Stop Bot' if cfg.is_running else 'Start Bot' }}
+    </button>
+  </div>
+</div>
+<script>
+function toggleBot(btn) {
+  fetch('/admin/bot/toggle', {method:'POST'})
+    .then(r => r.json())
+    .then(d => {
+      btn.textContent = d.is_running ? 'Stop Bot' : 'Start Bot';
+      btn.className = `btn ${d.is_running ? 'btn-danger' : 'btn-success'}`;
+      showAlert(`Bot ${d.status}!`, 'success');
+      document.querySelector('.badge').textContent = d.is_running ? '● Running' : '● Stopped';
+    });
+}
+</script>
+{% endblock %}

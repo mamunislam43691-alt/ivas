@@ -1,0 +1,50 @@
+{% extends "admin/layout.html" %}
+{% block title %}Update Cookies — VoltX Admin{% endblock %}
+{% block content %}
+<div class="page-title">🍪 Update IVASMS Session Cookies</div>
+
+<div class="card" style="max-width:700px;">
+  <div class="card-title">Current Session Status</div>
+  {% if cfg.session_updated %}
+    <span class="badge badge-green">✅ Cookies loaded — {{ cfg.session_updated.strftime('%d %b %Y %H:%M') }} UTC</span>
+  {% else %}
+    <span class="badge badge-red">❌ No cookies loaded</span>
+  {% endif %}
+</div>
+
+<div class="card" style="max-width:700px;">
+  <div class="card-title">📋 How to get cookies from Chrome</div>
+  <ol style="color:var(--muted);font-size:13px;line-height:2;padding-left:18px;">
+    <li>Open Chrome and login to <a href="https://www.ivasms.com" target="_blank">ivasms.com</a></li>
+    <li>Press <kbd style="background:var(--border);padding:2px 6px;border-radius:4px;">F12</kbd> to open DevTools</li>
+    <li>Go to <strong style="color:var(--text);">Console</strong> tab</li>
+    <li>Paste this code and press Enter:</li>
+  </ol>
+  <pre style="background:rgba(0,0,0,.3);padding:14px;border-radius:8px;font-size:12px;overflow-x:auto;margin:12px 0;">
+var c={}; document.cookie.split(';').forEach(p=>{var[k,v]=p.trim().split('=');c[k]=decodeURIComponent(v||'');}); console.log(JSON.stringify(c));</pre>
+  <p style="color:var(--muted);font-size:13px;">Copy the JSON output and paste below.</p>
+</div>
+
+<div class="card" style="max-width:700px;">
+  <form method="POST">
+    <div class="form-group">
+      <label>Cookies JSON</label>
+      <textarea class="form-control" name="cookies_json" rows="6" placeholder='{"ivasms_session":"...","XSRF-TOKEN":"...","cf_clearance":"..."}' required></textarea>
+    </div>
+    <div class="form-group">
+      <label>CSRF Token (optional — leave blank if unsure)</label>
+      <input class="form-control" name="csrf_token_val" type="text" placeholder="eyJpd...">
+    </div>
+    <button class="btn btn-primary" type="submit"><i class="fa fa-upload"></i> Update Cookies</button>
+  </form>
+</div>
+
+<div class="card" style="max-width:700px;">
+  <div class="card-title">🔌 Chrome Extension API</div>
+  <p style="color:var(--muted);font-size:13px;margin-bottom:10px;">The Chrome extension can POST cookies directly to:</p>
+  <pre style="background:rgba(0,0,0,.3);padding:12px;border-radius:8px;font-size:12px;">
+POST {{ request.host_url }}api/update-cookies
+Header: X-API-Key: voltx-extension-key
+Body: {"cookies": {...}}</pre>
+</div>
+{% endblock %}

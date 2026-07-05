@@ -1,0 +1,65 @@
+{% extends "admin/layout.html" %}
+{% block title %}Smart Ranges — VoltX Admin{% endblock %}
+{% block content %}
+<div class="page-title">⭐ Smart Range Selector</div>
+<p style="color:var(--muted);margin-bottom:20px;font-size:14px;">Ranges are ranked by OTP success rate over the last 3 hours. Bot automatically uses top ranges.</p>
+
+{% if suggested %}
+<div class="card">
+  <div class="card-title">🔥 Top Suggested Ranges (auto-used by bot)</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;">
+    {% for rng in suggested %}
+    <div style="background:rgba(108,99,255,.08);border:1px solid var(--accent);border-radius:12px;padding:18px;">
+      <div style="font-size:20px;font-weight:700;color:var(--accent2);">{{ rng.range_value }}</div>
+      <div style="font-size:12px;color:var(--muted);margin:6px 0;">{{ rng.numbers|length }} numbers available</div>
+      <div style="display:flex;justify-content:space-between;margin-top:10px;">
+        <span><i class="fa fa-key" style="color:var(--green);"></i> {{ rng.otp_count }} OTPs</span>
+        <span style="color:var(--green);font-weight:600;">{{ rng.success_rate }}% rate</span>
+      </div>
+      <div style="background:var(--border);border-radius:4px;height:6px;margin-top:10px;overflow:hidden;">
+        <div style="background:linear-gradient(90deg,var(--accent),var(--accent2));height:100%;width:{{ [rng.success_rate,100]|min }}%;"></div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% else %}
+<div class="card" style="text-align:center;color:var(--muted);padding:40px;">
+  No smart suggestions yet — the bot needs to run for a few hours to collect data.
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-title">📊 All Ranges — Performance Ranking</div>
+  <table>
+    <thead><tr><th>Rank</th><th>Range</th><th>Total OTPs</th><th>Success Rate</th><th>Numbers</th><th>Suggested</th></tr></thead>
+    <tbody>
+    {% for rng in all_ranges %}
+    <tr>
+      <td style="color:var(--muted);">#{{ loop.index }}</td>
+      <td><strong>{{ rng.range_value }}</strong></td>
+      <td>{{ rng.otp_count }}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="background:var(--border);border-radius:4px;height:6px;width:100px;overflow:hidden;">
+            <div style="background:{% if rng.success_rate > 50 %}var(--green){% elif rng.success_rate > 20 %}var(--yellow){% else %}var(--red){% endif %};height:100%;width:{{ [rng.success_rate,100]|min }}%;"></div>
+          </div>
+          {{ rng.success_rate }}%
+        </div>
+      </td>
+      <td>{{ rng.numbers|length }}</td>
+      <td>
+        {% if rng.is_suggested %}
+          <span class="badge badge-yellow">⭐ Yes</span>
+        {% else %}
+          <span style="color:var(--muted);">—</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:30px;">No ranges data yet</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

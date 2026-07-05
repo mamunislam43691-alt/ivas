@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Get Number — VoltX</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<style>
+:root{--bg:#0d0d1a;--card:#13132b;--border:#1e1e3f;--accent:#6c63ff;--accent2:#00d4ff;--green:#00e676;--yellow:#ffd600;--text:#e0e0ff;--muted:#7070a0;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;}
+.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;justify-content:space-between;align-items:center;}
+.brand{font-size:20px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.main{max-width:800px;margin:0 auto;padding:24px;}
+.page-title{font-size:22px;font-weight:600;margin-bottom:20px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px;}
+.card-title{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;}
+.range-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;}
+.range-card{border:2px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;transition:all .2s;position:relative;}
+.range-card:hover{border-color:var(--accent);background:rgba(108,99,255,.08);}
+.range-card.selected{border-color:var(--accent2);background:rgba(0,212,255,.08);}
+.range-card.hot{border-color:var(--yellow);}
+.range-name{font-size:16px;font-weight:700;color:var(--accent2);}
+.range-stats{font-size:11px;color:var(--muted);margin-top:6px;}
+.btn{padding:12px 28px;border-radius:8px;border:none;font-size:15px;font-weight:600;cursor:pointer;}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+.badge{padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;}
+.badge-yellow{background:rgba(255,214,0,.15);color:var(--yellow);}
+.alert{padding:12px 16px;border-radius:8px;margin-bottom:14px;font-size:13px;}
+.alert-success{background:rgba(0,230,118,.1);border:1px solid var(--green);color:var(--green);}
+.alert-warning{background:rgba(255,214,0,.1);border:1px solid var(--yellow);color:var(--yellow);}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span class="brand">⚡ VoltX</span>
+  <a href="/dashboard" style="color:var(--muted);font-size:13px;">← Back</a>
+</div>
+<div class="main">
+  <div class="page-title">📱 Get a Phone Number</div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+      <div class="alert alert-{{ 'success' if cat=='success' else 'warning' }}">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  {% if suggested %}
+  <div class="card">
+    <div class="card-title">⭐ Recommended Ranges (High OTP rate)</div>
+    <div class="range-grid">
+      {% for rng in suggested %}
+      <label class="range-card hot">
+        <input type="radio" name="range_select" value="{{ rng.id }}" style="display:none;" onchange="selectRange({{ rng.id }})">
+        <span class="badge badge-yellow">⭐ HOT</span>
+        <div class="range-name" style="margin-top:6px;">{{ rng.range_value }}</div>
+        <div class="range-stats">
+          {{ rng.otp_count }} OTPs · {{ rng.success_rate }}% rate<br>
+          {{ rng.numbers|selectattr('is_used','equalto',False)|list|length }} available
+        </div>
+      </label>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="card">
+    <div class="card-title">📡 All Active Ranges</div>
+    <form method="POST" id="getNumForm">
+      <div class="range-grid">
+        {% for rng in all_ranges %}
+        {% set avail = rng.numbers|selectattr('is_used','equalto',False)|list|length %}
+        <label class="range-card {% if rng.is_suggested %}hot{% endif %}" onclick="selectRange({{ rng.id }})">
+          <input type="radio" name="range_id" value="{{ rng.id }}" style="display:none;" required>
+          {% if rng.is_suggested %}<span class="badge badge-yellow">⭐</span>{% endif %}
+          <div class="range-name">{{ rng.range_value }}</div>
+          <div class="range-stats">
+            {{ rng.otp_count }} OTPs · {{ rng.success_rate }}%<br>
+            <span style="color:{% if avail > 0 %}var(--green){% else %}#ff1744{% endif %};">
+              {{ avail }} available
+            </span>
+          </div>
+        </label>
+        {% endfor %}
+      </div>
+      <div style="margin-top:20px;">
+        <button class="btn btn-primary" type="submit" id="submitBtn" disabled>
+          <i class="fa fa-phone"></i> Get Number from Selected Range
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+<script>
+function selectRange(id) {
+  document.querySelectorAll('.range-card').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('input[name="range_id"]').forEach(r => {
+    if (parseInt(r.value) === id) { r.checked = true; r.closest('.range-card').classList.add('selected'); }
+  });
+  document.getElementById('submitBtn').disabled = false;
+}
+</script>
+</body>
+</html>
